@@ -3,16 +3,16 @@ const morgan = require('morgan');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3001;
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// Middleware setup
+app.use(express.json()); // Allows JSON requests
+app.use(cors()); // Enables CORS to allow frontend requests
 
-// Morgan para logging
+// Morgan for logging HTTP requests
 morgan.token('object', (req) => JSON.stringify(req.body));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :object'));
 
+// Sample in-memory database
 let persons = [
   { id: 1, name: "Arto Hellas", number: "040-123456" },
   { id: 2, name: "Ada Lovelace", number: "39-44-5323523" },
@@ -20,33 +20,36 @@ let persons = [
   { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
 ];
 
-// Obtener toda la agenda
+// Get all contacts
 app.get('/api/persons', (req, res) => {
   res.json(persons);
 });
 
-// Obtener info general
+// Get general information
 app.get('/info', (req, res) => {
   const totalPersons = persons.length;
   const currentTime = new Date();
   res.send(`<p>Phonebook has info for ${totalPersons} people</p><p>${currentTime}</p>`);
 });
 
-// Obtener un contacto por ID
+// Get a contact by ID
 app.get('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id);
   const person = persons.find(p => p.id === id);
-  person ? res.json(person) : res.status(404).json({ error: "Person not found" });
+  
+  person
+    ? res.json(person)
+    : res.status(404).json({ error: "Person not found" });
 });
 
-// Eliminar un contacto
+// Delete a contact by ID
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id);
   persons = persons.filter(person => person.id !== id);
   res.status(204).end();
 });
 
-// Agregar un nuevo contacto
+// Add a new contact
 app.post('/api/persons', (req, res) => {
   const { name, number } = req.body;
 
@@ -68,9 +71,10 @@ app.post('/api/persons', (req, res) => {
   res.json(newPerson);
 });
 
-// Iniciar servidor
+// Set up the port (Render or local)
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 }).on('error', (err) => {
   console.error('Error starting server:', err);
 });
