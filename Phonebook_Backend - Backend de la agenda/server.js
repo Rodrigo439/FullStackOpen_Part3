@@ -1,13 +1,15 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3001;
 
-// Middleware para procesar JSON
+// Middleware
 app.use(express.json());
+app.use(cors());
 
-// Configurar morgan para registrar las solicitudes
+// Morgan para logging
 morgan.token('object', (req) => JSON.stringify(req.body));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :object'));
 
@@ -18,62 +20,57 @@ let persons = [
   { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
 ];
 
-// Ruta para obtener información general
+// Obtener toda la agenda
+app.get('/api/persons', (req, res) => {
+  res.json(persons);
+});
+
+// Obtener info general
 app.get('/info', (req, res) => {
   const totalPersons = persons.length;
   const currentTime = new Date();
   res.send(`<p>Phonebook has info for ${totalPersons} people</p><p>${currentTime}</p>`);
 });
 
-// Ruta para obtener una persona por ID
+// Obtener un contacto por ID
 app.get('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id);
-  const entry = persons.find(entry => entry.id === id);
-  entry ? res.json(entry) : res.status(404).json({ error: "Person not found" });
+  const person = persons.find(p => p.id === id);
+  person ? res.json(person) : res.status(404).json({ error: "Person not found" });
 });
 
-// Ruta para eliminar una persona por ID
+// Eliminar un contacto
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id);
-  persons = persons.filter(entry => entry.id !== id);
+  persons = persons.filter(person => person.id !== id);
   res.status(204).end();
 });
 
-// Ruta para agregar una nueva persona
+// Agregar un nuevo contacto
 app.post('/api/persons', (req, res) => {
-  console.log("Request Body:", req.body); // Para depuración
+  const { name, number } = req.body;
 
-  const body = req.body;
-
-  // Validar datos
-  if (!body.name || !body.number) {
+  if (!name || !number) {
     return res.status(400).json({ error: 'Name or number is missing' });
   }
 
-  // Verificar duplicados
-  if (persons.find(person => person.name === body.name)) {
+  if (persons.find(person => person.name === name)) {
     return res.status(400).json({ error: 'Name must be unique' });
   }
 
-  // Generar un nuevo ID
-  const newId = Math.floor(Math.random() * 10000);
+  const newPerson = {
+    id: Math.floor(Math.random() * 10000),
+    name,
+    number
+  };
 
-  // Crear la nueva entrada
-  const newEntry = { id: newId, name: body.name, number: body.number };
-
-  // Agregar la nueva entrada a la lista
-  persons = persons.concat(newEntry);
-
-  // Enviar la nueva entrada como respuesta
-  res.json(newEntry);
+  persons = [...persons, newPerson];
+  res.json(newPerson);
 });
 
-// Ruta para obtener todas las personas
-app.get('/api/persons', (req, res) => {
-  res.json(persons);
-});
-
-// Iniciar el servidor
+// Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
+}).on('error', (err) => {
+  console.error('Error starting server:', err);
 });
