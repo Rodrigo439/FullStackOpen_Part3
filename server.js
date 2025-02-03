@@ -20,6 +20,9 @@ let persons = [
   { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
 ];
 
+// Set up the port (Render or local)
+const PORT = process.env.PORT || 3001;
+
 // Get all contacts
 app.get('/api/persons', (req, res) => {
   res.json(persons);
@@ -71,8 +74,6 @@ app.post('/api/persons', (req, res) => {
   res.json(newPerson);
 });
 
-// Set up the port (Render or local)
-const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }).on('error', (err) => {
