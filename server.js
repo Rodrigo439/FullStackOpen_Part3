@@ -7,6 +7,7 @@ const app = express();
 // Middleware setup
 app.use(express.json()); // Allows JSON requests
 app.use(cors()); // Enables CORS to allow frontend requests
+app.use(express.static('dist')) //for the use of dist in production build
 
 // Morgan for logging HTTP requests
 morgan.token('object', (req) => JSON.stringify(req.body));
