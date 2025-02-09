@@ -1,8 +1,10 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
+const Person = require('./models/personData')
 
 // Middleware setup
 app.use(express.json()); // Allows JSON requests
@@ -13,67 +15,52 @@ app.use(express.static('dist')) //for the use of dist in production build
 morgan.token('object', (req) => JSON.stringify(req.body));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :object'));
 
-// Sample in-memory database
-let persons = [
-  { id: 1, name: "Arto Hellas", number: "040-123456" },
-  { id: 2, name: "Ada Lovelace", number: "39-44-5323523" },
-  { id: 3, name: "Dan Abramov", number: "12-43-234345" },
-  { id: 4, name: "Mary Poppendieck", number: "39-23-6423122" }
-];
-
 // Set up the port (Render or local)
 const PORT = process.env.PORT || 3001;
 
 // Get all contacts
-app.get('/api/persons', (req, res) => {
-  res.json(persons);
-});
 
-// Get general information
-app.get('/info', (req, res) => {
-  const totalPersons = persons.length;
-  const currentTime = new Date();
-  res.send(`<p>Phonebook has info for ${totalPersons} people</p><p>${currentTime}</p>`);
-});
+app.get("/api/persons",(req,res) => {
+  Person.find({}).then((persons)=>{
+    if (persons){
+      res.json(persons)
+    }else{
+      res.status(404).end()
+    }
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).end()
+  })
+})
 
-// Get a contact by ID
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const person = persons.find(p => p.id === id);
-  
-  person
-    ? res.json(person)
-    : res.status(404).json({ error: "Person not found" });
-});
-
-// Delete a contact by ID
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter(person => person.id !== id);
-  res.status(204).end();
-});
-
-// Add a new contact
 app.post('/api/persons', (req, res) => {
-  const { name, number } = req.body;
+  const body = req.body
 
-  if (!name || !number) {
-    return res.status(400).json({ error: 'Name or number is missing' });
+  if (body.name === undefined) {
+    return res.status(400).json({ error: 'name missing' })
   }
 
-  if (persons.find(person => person.name === name)) {
-    return res.status(400).json({ error: 'Name must be unique' });
-  }
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
 
-  const newPerson = {
-    id: Math.floor(Math.random() * 10000),
-    name,
-    number
-  };
+  person.save().then(savedPerson => {
+    res.json(savedPerson)
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({error: "failed to save data"})
+  })
+})
 
-  persons = [...persons, newPerson];
-  res.json(newPerson);
-});
+app.delete('/api/persons/:id', (req,res)=>{
+  Person.findByIdAndDelete(req.params.id).then((result)=>{
+    res.status(204).end()
+  }).catch(error=>{
+    console.log(error)
+    res.status(500).json({error: "failed to delete data"})
+  })
+})
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
