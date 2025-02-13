@@ -19,33 +19,33 @@ mongoose.connect(url)
 const personSchema = new mongoose.Schema({
   name: String,
   number: String,
-});
+})
 
-const Person = mongoose.model('Person', personSchema);
+const Person = mongoose.model('Person', personSchema)
 if(!name && !number) {
-    Person.find({}).then((result)=>{
-        console.log('phonebook: ')
-        result.forEach((person)=>{
-            console.log(`${person.name} ${person.number}`)
-        });
-        mongoose.connection.close();
-    }).catch((err)=>{
-        console.error("Sn error has occurren when fetching person data: ", err)
-        mongoose.connection.close()
-    });
+  Person.find({}).then((result) => {
+    console.log('phonebook: ')
+    result.forEach((person) => {
+      console.log(`${person.name} ${person.number}`)
+    })
+    mongoose.connection.close()
+  }).catch((err) => {
+    console.error('Sn error has occurren when fetching person data: ', err)
+    mongoose.connection.close()
+  })
 } else {
-    const person = new Person({
-        name,
-        number,
-    });
-        
-    person.save().then((result) => {
-        console.log(`Added ${name} number: ${number} to the Phonebook`)
-        mongoose.connection.close()
-    }).catch((err)=>{
-        console.error("An error has occurred when registering a Person: ", err)
-        mongoose.connection.close()
-    });
+  const person = new Person({
+    name,
+    number,
+  })
+
+  person.save().then((result) => {
+    console.log(`Added ${name} number: ${number} to the Phonebook`)
+    mongoose.connection.close()
+  }).catch((err) => {
+    console.error('An error has occurred when registering a Person: ', err)
+    mongoose.connection.close()
+  })
 }
 
 
